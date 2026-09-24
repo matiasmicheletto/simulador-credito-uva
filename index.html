@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta lang="es" http-equiv="Content-Language" content="es">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Calculadora de cambio de vivienda para créditos UVA. Compara escenarios de venta y compra de vivienda, considerando inflación, tipo de cambio, ingresos y gastos.">
+    <meta name="author" content="Matías M.">
+    <meta name="keywords" content="calculadora, crédito, UVA, vivienda, cambio">
+    <title>Calculadora de cambio de vivienda — Crédito UVA</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <main>
+        <h1>Calculadora de cambio de vivienda — Crédito UVA</h1>
+        <p class="note">Modelo mensual para comparar qué ocurre si vendés la vivienda y cancelás el crédito en distintos
+            momentos.</p>
+
+        <div class="grid">
+            <section class="card">
+                <h2>Crédito UVA</h2>
+
+                <div class="mode-selector" role="radiogroup" aria-label="Modo de carga del crédito">
+                    <label>
+                        <input type="radio" name="loanMode" value="balance" checked>
+                        <span>Conozco el saldo actual</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="loanMode" value="original">
+                        <span>Conozco el crédito original</span>
+                    </label>
+                </div>
+
+                <div id="balanceMode">
+                    <label>Número de cuota actual<input id="cuota" type="number" value="12" min="1"></label>
+                    <label>Total de cuotas del crédito (cantidad)<input id="totalCuotas" type="number" value="120"
+                            min="1"></label>
+                    <label>Tasa anual efectiva del crédito (%)<input id="tasa" type="number" value="6"
+                            step="0.01"></label>
+                    <label>Saldo de capital actual (UVA)<input id="saldoUva" type="number" value="60000" min="0"
+                            step="0.01"></label>
+                    <label>Valor actual de la UVA (ARS)<input id="uva" type="number" value="2100" min="0"
+                            step="0.01"></label>
+                </div>
+
+                <div id="originalMode" style="display:none">
+                    <label>Valor original de la vivienda (USD)<input id="valorOriginalUsd" type="number" value="120000"
+                            min="0"></label>
+                    <label>Tipo de cambio al originar el crédito (ARS/USD)<input id="dolarOriginal" type="number"
+                            value="1500" min="0"></label>
+                    <label>Porcentaje financiado (%)<input id="financiacion" type="number" value="80" min="0" max="100"
+                            step="0.1"></label>
+                    <label>Plazo original (meses)<input id="plazoOriginal" type="number" value="120" min="1"></label>
+                    <label>Tasa anual efectiva del crédito (%)<input id="tasaOriginal" type="number" value="6"
+                            step="0.01"></label>
+                    <label>Valor de la UVA al originar el crédito (ARS)<input id="uvaOriginal" type="number"
+                            value="2100" min="0" step="0.01"></label>
+                    <label>Número de cuota actual<input id="cuotaOriginal" type="number" value="1" min="1"></label>
+                    <label>Valor actual de la UVA (ARS)<input id="uvaActualOriginal" type="number" value="2100" min="0"
+                            step="0.01"></label>
+                    <div class="derived">
+                        <div>Valor original de la vivienda: <strong id="valorOriginalArs">—</strong></div>
+                        <div>Capital original: <strong id="capitalOriginalArs">—</strong> (<strong
+                                id="capitalOriginalUva">—</strong> UVA)</div>
+                        <div>Cuota estimada: <strong id="cuotaOriginalUva">—</strong> UVA / mes</div>
+                        <div>Saldo actual: <strong id="saldoOriginalUva">—</strong> UVA</div>
+                    </div>
+                </div>
+
+                <div id="balanceDerived" class="derived">
+                    <div>Cuota estimada: <strong id="cuotaUva">—</strong> UVA / mes</div>
+                    <div>Cuota actual equivalente: <strong id="cuotaArs">—</strong> / mes</div>
+                </div>
+
+                <div id="cancellationFields">
+                    <label>Penalización por cancelación anticipada (% sobre el saldo a cancelar)<input id="penalizacion"
+                            type="number" value="4" step="0.01"></label>
+                    <label>Penalización hasta cuota<input id="penalizacionHastaCuota" type="number" value="24"
+                            min="0"></label>
+                    <label>Otros costos mensuales asociados al crédito (ARS)<input id="otrosCuota" type="number"
+                            value="30000" min="0"></label>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Dinámica económica</h2>
+                <label>Inflación mensual esperada (%)
+                    <input id="inflacion" type="number" value="2" step="0.1">
+                    <small>La UVA se proyecta aproximadamente al mismo ritmo que la inflación. Es una aproximación
+                        centralizada en el motor y no una identidad matemática exacta.</small>
+                </label>
+                <label>Tipo de cambio actual (ARS/USD)<input id="dolar" type="number" value="1500" min="0"></label>
+                <label>Variación mensual esperada del dólar (%)
+                    <input id="crecimientoDolar" type="number" value="2" step="0.1">
+                    <input id="crecimientoDolar_slider" type="range" min="-10" max="10" step="0.1" value="2">
+                </label>
+                <label>Ingresos mensuales actuales (ARS)
+                    <input id="ingresos" type="number" value="2000000" min="0">
+                    <input id="ingresos_slider" type="range" min="0" max="10000000" step="10000" value="2000000">
+                </label>
+                <label>Crecimiento mensual esperado de ingresos (%)<input id="crecimientoIngresos" type="number"
+                        value="2" step="0.1"></label>
+                <label>Gastos mensuales actuales (ARS)
+                    <input id="gastos" type="number" value="1000000" min="0">
+                    <input id="gastos_slider" type="range" min="0" max="10000000" step="10000" value="1500000">
+                </label>
+                <label>Crecimiento mensual esperado de gastos (%)<input id="crecimientoGastos" type="number" value="2"
+                        step="0.1"></label>
+            </section>
+
+            <section class="card">
+                <h2>Vivienda y operación</h2>
+                <label>Valor actual de la vivienda que vendés (USD)<input id="casa" type="number" value="120000"
+                        min="0"></label>
+                <label>Variación mensual esperada de esa vivienda (%)<input id="crecimientoCasa" type="number"
+                        value="0.3" step="0.1"></label>
+                <label>Valor actual de la vivienda objetivo que querés comprar (USD)<input id="objetivo" type="number"
+                        value="180000" min="0"></label>
+                <label>Variación mensual esperada de la vivienda objetivo (%)<input id="crecimientoObjetivo"
+                        type="number" value="0.3" step="0.1"></label>
+                <label>Costos de venta (% del precio de venta)<input id="costosVenta" type="number" value="4"
+                        step="0.1"></label>
+                <label>Costos de compra (% del precio de compra)<input id="costosCompra" type="number" value="5"
+                        step="0.1"></label>
+                <label>Reserva mínima que querés conservar después de comprar (USD)<input id="reserva" type="number"
+                        value="10000" min="0"></label>
+                <label>Ahorros actuales invertidos (USD)<input id="ahorroUsd" type="number" value="15000"
+                        min="0"></label>
+                <label>Rendimiento anual estimado de los ahorros invertidos (%)
+                    <input id="rendimientoAhorros" type="number" value="0" step="0.1">
+                    <small>Se aplica mes a mes sobre el saldo de ahorros en dólares, además de lo que vayas ahorrando de
+                        tu
+                        ingreso mensual.</small>
+                </label>
+            </section>
+        </div>
+
+        <div class="actions">
+            <button class="blue" onclick="tryCalcular()">Recalcular</button>
+            <button class="green" onclick="exportarJSON()">Exportar JSON</button>
+            <button class="red" onclick="importarJSON()">Importar JSON</button>
+            <input type="file" id="jsonFile" accept="application/json" style="display:none"
+                onchange="onJSONFile(event)">
+        </div>
+
+        <section class="card results">
+            <h2>Escenarios</h2>
+            <div class="kpis" id="kpis"></div>
+            <div style="margin-top:16px" id="chartWrap">
+                <canvas id="chart" width="1200" height="340"></canvas>
+                <div id="chartTip"></div>
+            </div>
+            <p><small>Eje horizontal: mes desde hoy (0 = ahora, hasta la última cuota del crédito). Eje vertical:
+                    excedente
+                    (+) o faltante (-), en dólares, para comprar la vivienda objetivo después de vender la vivienda
+                    actual y
+                    cancelar el crédito ese mes. El punto verde marca el mes de mayor excedente; el punto azul, el
+                    primer mes en
+                    que alcanza para comprar y además conservar la reserva mínima. Pasá el cursor sobre el gráfico para
+                    ver el
+                    detalle de cada mes.</small></p>
+            <div class="scroll" style="margin-top:16px">
+                <table>
+                    <thead>
+                        <tr>
+                            <th
+                                data-tip="Número de mes desde hoy. El mes 0 es la situación actual; el último mes es la última cuota del crédito.">
+                                Mes</th>
+                            <th
+                                data-tip="Cuota mensual del crédito en pesos ese mes (cuota en UVA × valor de la UVA), incluyendo seguros/impuestos asociados.">
+                                Cuota</th>
+                            <th
+                                data-tip="Saldo pendiente del crédito ese mes, convertido de UVA a dólares al tipo de cambio de ese mes.">
+                                Saldo crédito (USD)</th>
+                            <th
+                                data-tip="Valor estimado en dólares de la vivienda que vendés, proyectado con su variación mensual esperada.">
+                                Valor vivienda</th>
+                            <th data-tip="Precio de venta de la vivienda actual menos los costos de venta, en pesos.">
+                                Venta neta</th>
+                            <th
+                                data-tip="Ahorros invertidos (con su rendimiento) más la venta neta, menos lo que cuesta cancelar el crédito ese mes (con penalización si corresponde), en pesos.">
+                                Capital disponible</th>
+                            <th data-tip="Valor estimado en dólares de la vivienda objetivo que querés comprar.">Precio
+                                objetivo</th>
+                            <th
+                                data-tip="Precio objetivo en pesos más los costos de compra (escritura, comisión, etc.).">
+                                Compra +
+                                gastos</th>
+                            <th
+                                data-tip="Capital disponible menos el costo total de compra, en dólares. Positivo = te sobra dinero; negativo = te falta.">
+                                Faltante / excedente</th>
+                            <th
+                                data-tip="Dinero que lográs ahorrar ese mes (ingresos − gastos − cuota), en pesos. Se suma a tus ahorros en dólares del mes siguiente.">
+                                Ahorro mensual</th>
+                            <th
+                                data-tip="Saldo acumulado de tus ahorros en dólares a ese mes, incluyendo el rendimiento por inversión configurado.">
+                                Ahorro acumulado (USD)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <div class="actions">
+                <button class="green" onclick="exportarCSV()">Exportar tabla</button>
+            </div>
+        </section>
+
+        <section class="card" style="margin-top:16px">
+            <h2>Supuestos del modelo</h2>
+            <p><small>
+                    El crédito se modela en UVA con amortización francesa. La tasa anual se convierte a tasa efectiva
+                    mensual.
+                    El crédito se mantiene internamente en UVA. Puede cargarse el saldo actual o reconstruirse el
+                    crédito original;
+                    ambos modos generan la misma estructura interna.
+                    Cada mes el saldo se actualiza con interés y amortización. La UVA se proyecta con la misma tasa que
+                    la
+                    inflación mensual esperada (un único campo controla ambas). El dólar, los ingresos, los gastos y los
+                    valores
+                    inmobiliarios evolucionan según sus tasas mensuales configuradas.
+                    Los ahorros en dólares crecen cada mes por el rendimiento anual estimado que configures, y además se
+                    les suma
+                    lo que ahorrás mes a mes (ingresos − gastos − cuota, convertido a dólares al tipo de cambio de ese
+                    mes).
+                    Al vender, se descuenta el costo de venta y la cancelación del saldo UVA convertido a pesos, con
+                    penalización
+                    hasta la cuota indicada. El horizonte de la simulación llega hasta la última cuota del
+                    crédito.
+                    El indicador «faltante/excedente» compara el capital disponible después de vender y cancelar contra
+                    el costo
+                    de comprar la vivienda objetivo y sus gastos; la reserva mínima se verifica sobre ese mismo
+                    excedente. No
+                    constituye una recomendación financiera.
+                </small></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <a class="repository-link" href="https://github.com/matiasmicheletto/simulador-credito-uva"
+                target="_blank" rel="noopener noreferrer" aria-label="Ver el repositorio en GitHub">
+                <svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor"
+                        d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.29-1.23 3.29-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.6-2.8 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 12 .5Z" />
+                </svg>
+                <span>Ver el repositorio en GitHub</span>
+            </a>
+
+            <nav class="social-links" aria-label="Redes sociales">
+                <a href="https://www.instagram.com/matias.miche/" aria-label="Instagram" title="Instagram">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2" />
+                        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" />
+                        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                    </svg>
+                </a>
+                <a href="https://www.facebook.com/miche1989" aria-label="Facebook" title="Facebook">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M14 8h3V4h-3c-3.31 0-5 1.79-5 5v3H6v4h3v4h4v-4h3.2l.8-4H13V9c0-.66.34-1 1-1Z" />
+                    </svg>
+                </a>
+                <a href="https://x.com/yomatiasmiche" aria-label="Twitter" title="Twitter">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M18.9 2H22l-6.77 7.74L23.2 22h-6.24l-4.89-6.39L6.48 22H3.37l7.24-8.28L2.8 2h6.4l4.42 5.84L18.9 2Zm-1.1 17.6h1.73L8.28 4.26H6.42L17.8 19.6Z" />
+                    </svg>
+                </a>
+                <a href="https://www.linkedin.com/in/matiasmicheletto/" aria-label="LinkedIn" title="LinkedIn">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M5 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 10h4v11H3V10Zm6 0h3.84v1.5h.05c.53-1 1.84-2.05 3.78-2.05 4.04 0 4.78 2.66 4.78 6.12V21h-4v-4.83c0-1.15-.02-2.63-1.6-2.63-1.6 0-1.84 1.25-1.84 2.55V21H9V10Z" />
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/@matiasmiche" aria-label="YouTube" title="YouTube">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M21.58 7.19a2.99 2.99 0 0 0-2.1-2.12C17.63 4.5 12 4.5 12 4.5s-5.63 0-7.48.57a2.99 2.99 0 0 0-2.1 2.12C1.85 9.05 1.85 12 1.85 12s0 2.95.57 4.81a2.99 2.99 0 0 0 2.1 2.12c1.85.57 7.48.57 7.48.57s5.63 0 7.48-.57a2.99 2.99 0 0 0 2.1-2.12c.57-1.86.57-4.81.57-4.81s0-2.95-.57-4.81ZM10 15.5v-7l6 3.5-6 3.5Z" />
+                    </svg>
+                </a>
+            </nav>
+
+            <p class="copyright">© 2026 Matías Micheletto</p>
+        </div>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
