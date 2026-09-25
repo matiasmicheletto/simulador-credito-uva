@@ -36,6 +36,18 @@
                     </label>
                 </div>
 
+                <div class="mode-selector" role="radiogroup" aria-label="Interpretación de la tasa anual">
+                    <label>
+                        <input type="radio" name="rateMode" value="tea" checked>
+                        <span>TEA</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="rateMode" value="tna">
+                        <span>TNA</span>
+                    </label>
+                    <small>La TEA (Tasa Efectiva Anual) ya incorpora la capitalización compuesta anual. La TNA (Tasa Nominal Anual) es la que el banco capitaliza linealmente mes a mes (tasa mensual = TNA / 12), y es la forma más común en la operatoria bancaria argentina. Si se carga una TNA pero se interpreta como TEA, la cuota calculada sale mal.</small>
+                </div>
+
                 <div id="balanceMode">
                     <label>Número de cuota actual<input id="cuota" type="number" value="12" min="1"></label>
                     <label>Total de cuotas del crédito (cantidad)<input id="totalCuotas" type="number" value="120"
@@ -84,6 +96,8 @@
                             min="0"></label>
                     <label>Otros costos mensuales asociados al crédito (ARS)<input id="otrosCuota" type="number"
                             value="30000" min="0"></label>
+                        <label>Umbral de relación cuota/ingreso (RCI) (%)<input id="umbralRci" type="number" value="30"
+                            min="0" step="0.1"></label>
                 </div>
             </section>
 
@@ -123,13 +137,13 @@
                         value="180000" min="0"></label>
                 <label>Variación mensual esperada de la vivienda objetivo (%)<input id="crecimientoObjetivo"
                         type="number" value="0.3" step="0.1"></label>
-                <label>Costos de venta (% del precio de venta)<input id="costosVenta" type="number" value="4"
+                <label>Costos de venta (% del precio de venta)<input id="costosVenta" type="number" value="3"
                         step="0.1"></label>
-                <label>Costos de compra (% del precio de compra)<input id="costosCompra" type="number" value="5"
+                <label>Costos de compra (% del precio de compra)<input id="costosCompra" type="number" value="3"
                         step="0.1"></label>
                 <label>Reserva mínima que querés conservar después de comprar (USD)<input id="reserva" type="number"
                         value="10000" min="0"></label>
-                <label>Ahorros actuales invertidos (USD)<input id="ahorroUsd" type="number" value="15000"
+                <label>Ahorros actuales invertidos (USD)<input id="ahorroUsd" type="number" value="20000"
                         min="0"></label>
                 <label>Rendimiento anual estimado de los ahorros invertidos (%)
                     <input id="rendimientoAhorros" type="number" value="0" step="0.1">
@@ -138,6 +152,20 @@
                         ingreso mensual.</small>
                 </label>
             </section>
+
+                <section class="card">
+                <h2>Configuración avanzada</h2>
+                <label>Costos notariales y registrales estimados de cancelación de hipoteca (ARS)<input
+                    id="costosCancelacionExtra" type="number" value="0" min="0"></label>
+                <label>Spread cambiario entre punta compradora y vendedora (%)<input id="spreadCambiario" type="number"
+                    value="0" min="0" step="0.1"></label>
+                <label>Carga impositiva estimada sobre el rendimiento de los ahorros (%)<input id="impuestoRendimiento"
+                    type="number" value="0" min="0" max="100" step="0.1"></label>
+                <label>Tasa anual de la deuda acumulada (%)<input id="tasaDeuda" type="number" value="60" min="0"
+                    step="0.1"></label>
+                <small>Orientativa: suele ser mayor que la tasa del crédito hipotecario porque representa deuda de
+                    consumo o descubierto.</small>
+                </section>
         </div>
 
         <div class="actions">
@@ -152,8 +180,14 @@
             <h2>Escenarios</h2>
             <div class="kpis" id="kpis"></div>
             <div style="margin-top:16px" id="chartWrap">
+                <h3>Faltante / excedente por mes</h3>
                 <canvas id="chart" width="1200" height="340"></canvas>
                 <div id="chartTip"></div>
+            </div>
+            <div style="margin-top:16px" id="savingsChartWrap">
+                <h3>Ahorro y deuda acumulados por mes</h3>
+                <canvas id="savingsChart" width="1200" height="340"></canvas>
+                <div id="savingsChartTip"></div>
             </div>
             <p><small>Eje horizontal: mes desde hoy (0 = ahora, hasta la última cuota del crédito). Eje vertical:
                     excedente
@@ -195,11 +229,14 @@
                                 data-tip="Capital disponible menos el costo total de compra, en dólares. Positivo = te sobra dinero; negativo = te falta.">
                                 Faltante / excedente</th>
                             <th
-                                data-tip="Dinero que lográs ahorrar ese mes (ingresos − gastos − cuota), en pesos. Se suma a tus ahorros en dólares del mes siguiente.">
-                                Ahorro mensual</th>
+                                data-tip="Flujo mensual (ingresos − gastos − cuota), en pesos. Si es positivo se convierte en ahorro; si es negativo, primero consume ahorros y luego genera deuda acumulada.">
+                                Flujo mensual</th>
                             <th
                                 data-tip="Saldo acumulado de tus ahorros en dólares a ese mes, incluyendo el rendimiento por inversión configurado.">
                                 Ahorro acumulado (USD)</th>
+                            <th
+                                data-tip="Deuda generada por meses donde el gasto total superó los ingresos y ya no había ahorros para cubrirlo, capitalizada a la tasa de deuda.">
+                                Deuda acumulada (USD)</th>
                         </tr>
                     </thead>
                     <tbody id="tbody"></tbody>
@@ -213,8 +250,8 @@
         <section class="card" style="margin-top:16px">
             <h2>Supuestos del modelo</h2>
             <p><small>
-                    El crédito se modela en UVA con amortización francesa. La tasa anual se convierte a tasa efectiva
-                    mensual.
+                    El crédito se modela en UVA con amortización francesa. La tasa anual se interpreta según el selector
+                    elegido: la TEA se convierte a tasa efectiva mensual y la TNA se divide linealmente por 12.
                     El crédito se mantiene internamente en UVA. Puede cargarse el saldo actual o reconstruirse el
                     crédito original;
                     ambos modos generan la misma estructura interna.
@@ -223,14 +260,23 @@
                     inflación mensual esperada (un único campo controla ambas). El dólar, los ingresos, los gastos y los
                     valores
                     inmobiliarios evolucionan según sus tasas mensuales configuradas.
-                    Los ahorros en dólares crecen cada mes por el rendimiento anual estimado que configures, y además se
-                    les suma
-                    lo que ahorrás mes a mes (ingresos − gastos − cuota, convertido a dólares al tipo de cambio de ese
-                    mes).
+                    Los ahorros en dólares crecen cada mes por el rendimiento anual estimado neto de la carga impositiva
+                    configurada, y además se les suma el flujo mensual positivo (ingresos − gastos − cuota, convertido a
+                    dólares al tipo de cambio de ese mes).
+                    El ahorro mensual convertido a dólares usa la punta vendedora y la liquidación de ahorros para cubrir
+                    déficits usa la punta compradora cuando se configura un spread cambiario.
+                    El rendimiento de los ahorros se reduce según la carga impositiva estimada configurada.
                     Al vender, se descuenta el costo de venta y la cancelación del saldo UVA convertido a pesos, con
-                    penalización
-                    hasta la cuota indicada. El horizonte de la simulación llega hasta la última cuota del
-                    crédito.
+                    penalización hasta la cuota indicada y los costos notariales y registrales estimados de cancelación.
+                    El horizonte de la simulación llega hasta la última cuota del crédito.
+                    El spread cambiario usa una punta vendedora superior para comprar dólares con el ahorro mensual y
+                    una punta compradora inferior para liquidar ahorros y valuar el capital disponible.
+                    La relación cuota/ingreso (RCI) se calcula con los ingresos de cada mes y se marca cuando supera el
+                    umbral configurado; el gráfico indica el primer mes que lo supera.
+                    Si el flujo mensual (ingresos − gastos − cuota) es negativo, primero se cubre con los ahorros
+                    disponibles y luego el faltante se acumula como deuda en pesos, capitalizada con una tasa independiente
+                    de la tasa del crédito hipotecario. La deuda solo se convierte a dólares al calcular el capital
+                    disponible y al mostrarla junto con el ahorro acumulado en el segundo gráfico.
                     El indicador «faltante/excedente» compara el capital disponible después de vender y cancelar contra
                     el costo
                     de comprar la vivienda objetivo y sus gastos; la reserva mínima se verifica sobre ese mismo

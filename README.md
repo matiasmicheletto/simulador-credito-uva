@@ -15,15 +15,22 @@ La simulación proyecta la evolución mensual del crédito, la vivienda actual, 
 - Proyección mensual hasta la última cuota del crédito.
 - Proyección de UVA a partir de la inflación mensual esperada.
 - Proyección independiente del tipo de cambio, ingresos, gastos y valores de ambas viviendas.
+- Interpretación de la tasa del crédito como TEA o TNA.
 - Cálculo de penalización por cancelación anticipada hasta una cuota determinada.
-- Inclusión de costos de venta, costos de compra y reserva mínima en USD.
-- Proyección de ahorros en dólares, considerando rendimiento anual y ahorro mensual.
+- Inclusión de costos de venta, costos de compra, reserva mínima en USD y costos notariales/registrales de cancelación.
+- Configuración de spread cambiario entre puntas compradora y vendedora.
+- Proyección de ahorros en dólares, considerando rendimiento anual, carga impositiva y flujo mensual positivo.
+- Acumulación de deuda operativa en pesos cuando el flujo mensual negativo agota los ahorros, con tasa anual independiente.
+- Alerta de relación cuota/ingreso (RCI) mediante umbral configurable.
 - Indicadores principales:
   - mes con mayor excedente;
   - primer mes que cubre la compra y la reserva;
   - costo de cancelación hoy;
-  - costo de cancelación en 24 meses.
+  - costo de cancelación en 24 meses;
+  - primer mes que supera el umbral RCI;
+  - primer mes con deuda acumulada.
 - Gráfico interactivo de faltante o excedente por mes.
+- Gráfico interactivo de ahorro y deuda acumulados por mes.
 - Tabla detallada con el escenario completo.
 - Exportación de parámetros a JSON.
 - Importación de parámetros desde JSON.
@@ -74,8 +81,10 @@ La consulta tiene un tiempo máximo de espera de cinco segundos. Si una API no r
 
 - **Conozco el saldo actual:** requiere la cuota actual, el total de cuotas, la tasa efectiva anual, el saldo de capital en UVA y el valor actual de la UVA.
 - **Conozco el crédito original:** reconstruye el capital original a partir del valor de la vivienda, el tipo de cambio, el porcentaje financiado y el valor original de la UVA. Luego estima la cuota y el saldo actual.
+- La tasa puede interpretarse como TEA, con capitalización compuesta anual, o como TNA, calculada como tasa mensual nominal dividida por 12.
 - Penalización por cancelación anticipada y cuota hasta la que aplica.
 - Otros costos mensuales asociados al crédito.
+- Umbral configurable de relación cuota/ingreso (RCI).
 
 ### Dinámica económica
 
@@ -84,6 +93,8 @@ La consulta tiene un tiempo máximo de espera de cinco segundos. Si una API no r
 - Ingresos y gastos mensuales actuales.
 - Crecimiento mensual esperado de ingresos y gastos.
 - Rendimiento anual estimado de los ahorros en dólares.
+- Carga impositiva estimada sobre el rendimiento de los ahorros.
+- Tasa anual de la deuda acumulada, independiente de la tasa del crédito.
 
 ### Vivienda y operación
 
@@ -93,21 +104,32 @@ La consulta tiene un tiempo máximo de espera de cinco segundos. Si una API no r
 - Reserva mínima a conservar después de la operación.
 - Ahorros actuales invertidos en dólares.
 
+### Configuración avanzada
+
+- Costos notariales y registrales estimados de cancelación de hipoteca.
+- Spread cambiario entre punta compradora y vendedora.
+- Tasa anual de la deuda acumulada.
+
 ## Supuestos del modelo
 
 - El crédito se mantiene internamente en UVA.
 - La amortización utiliza el sistema francés.
-- La tasa efectiva anual se convierte a una tasa efectiva mensual.
+- La tasa del crédito se interpreta como TEA o TNA según la selección: la TEA se convierte mediante capitalización compuesta y la TNA se divide linealmente por 12.
 - La UVA crece al mismo ritmo que la inflación mensual esperada. Es una aproximación del modelo, no una identidad matemática exacta.
 - El tipo de cambio, los ingresos, los gastos y los valores inmobiliarios se proyectan aplicando sus respectivas variaciones mensuales.
 - La cuota en pesos se calcula como cuota en UVA por valor proyectado de la UVA, más los otros costos mensuales configurados.
 - El saldo del crédito se cancela en pesos y se convierte a dólares usando el tipo de cambio del mes correspondiente.
+- La cancelación incluye la penalización aplicable y los costos notariales/registrales extra configurados.
 - La venta neta descuenta los costos de venta.
 - La compra total incluye el precio de la vivienda objetivo y los costos de compra.
-- El ahorro mensual se calcula como ingresos menos gastos menos cuota. Solo se acumulan valores no negativos.
-- Los ahorros en dólares se actualizan con el rendimiento mensual equivalente y se incrementan con el ahorro mensual convertido al tipo de cambio del mes.
+- El flujo mensual se calcula como ingresos menos gastos menos cuota. Si es positivo, se convierte a dólares y se suma a los ahorros.
+- Los ahorros en dólares se actualizan con el rendimiento mensual equivalente neto de impuestos y el flujo positivo convertido usando la punta vendedora superior.
+- Si el flujo mensual es negativo, primero se utilizan los ahorros disponibles, liquidados a la punta compradora inferior. El faltante restante se acumula como deuda en pesos y se capitaliza con la tasa de deuda, independiente de la tasa hipotecaria.
+- La deuda acumulada se capitaliza en pesos y se convierte a dólares únicamente al calcular el capital disponible; su valor se descuenta usando la punta compradora.
 - El indicador de faltante/excedente es el capital disponible después de vender y cancelar el crédito, menos el costo total de compra, expresado en dólares.
 - Un mes es considerado alcanzable cuando el excedente es positivo o cero y también permite conservar la reserva mínima.
+- La RCI de cada mes es la cuota en pesos dividida por los ingresos de ese mes; se marca cuando supera el umbral configurado.
+- El gráfico adicional muestra simultáneamente la evolución del ahorro acumulado y la deuda acumulada en dólares.
 
 ## Estructura del repositorio
 

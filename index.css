@@ -272,6 +272,15 @@ button.red:hover {
     box-shadow: 0 2px 8px -2px rgba(36, 87, 166, .5);
 }
 
+.mode-selector small {
+    grid-column: 1 / -1;
+    display: block;
+    padding: 4px 6px 2px;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
 .derived {
     margin-top: 4px;
     padding: 12px 14px;
@@ -337,6 +346,12 @@ button.red:hover {
 
 .warn {
     color: var(--warn)
+}
+
+.insolvente,
+tr.insolvente td {
+    color: var(--bad);
+    background: var(--bad-soft);
 }
 
 table {
@@ -432,7 +447,8 @@ th[data-tip]:hover::after {
     background: transparent;
 }
 
-#chartWrap {
+#chartWrap,
+#savingsChartWrap {
     position: relative
 }
 
@@ -447,7 +463,8 @@ canvas {
     display: block
 }
 
-#chartTip {
+#chartTip,
+#savingsChartTip {
     position: absolute;
     display: none;
     background: var(--ink);
