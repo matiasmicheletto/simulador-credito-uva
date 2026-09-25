@@ -522,6 +522,8 @@ function drawChart(rows, firstFeasible, maxGapRow) {
     ctx.beginPath();
     ctx.moveTo(pad.l, y(0));
     ctx.lineTo(W - pad.r, y(0));
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, H - pad.b);
     ctx.stroke();
 
     chartPoints = [];
@@ -565,8 +567,14 @@ function drawChart(rows, firstFeasible, maxGapRow) {
 
     ctx.fillStyle = "#68707a";
     ctx.font = "12px system-ui";
-    ctx.fillText("Eje Y: excedente (+) / faltante (-) en USD", pad.l, 16);
-    ctx.fillText("Eje X: mes desde hoy", W - pad.r - 140, 16);
+    ctx.textAlign = "center";
+    ctx.fillText("Eje X: mes desde hoy", (pad.l + W - pad.r) / 2, H - 2);
+    ctx.save();
+    ctx.translate(16, (pad.t + H - pad.b) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("Eje Y: excedente (+) / faltante (-) en USD", 0, 0);
+    ctx.restore();
+    ctx.textAlign = "start";
     ctx.fillText(num(min), 5, H - pad.b + 5);
     ctx.fillText(num(max), 5, pad.t + 5);
     for (let i = 0; i < rows.length; i += Math.max(1, Math.floor(rows.length / 10))) {

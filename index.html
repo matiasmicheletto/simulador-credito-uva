@@ -9,6 +9,9 @@
     <meta name="author" content="Matías M.">
     <meta name="keywords" content="calculadora, crédito, UVA, vivienda, cambio">
     <title>Calculadora de cambio de vivienda — Crédito UVA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
 
@@ -139,8 +142,8 @@
 
         <div class="actions">
             <button class="blue" onclick="tryCalcular()">Recalcular</button>
-            <button class="green" onclick="exportarJSON()">Exportar JSON</button>
-            <button class="red" onclick="importarJSON()">Importar JSON</button>
+            <button class="green" onclick="exportarJSON()">Exportar formulario</button>
+            <button class="red" onclick="importarJSON()">Importar formulario</button>
             <input type="file" id="jsonFile" accept="application/json" style="display:none"
                 onchange="onJSONFile(event)">
         </div>
